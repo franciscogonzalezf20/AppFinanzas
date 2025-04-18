@@ -1,62 +1,32 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader } from "@mui/material";
-import { Button, TextField, Grid, Typography } from "@mui/material";
 
-export default function FinancialDashboard() {
-  const [financialData, setFinancialData] = useState({
-    ingresos: "",
-    costos: "",
-    gastos: "",
-    activos: "",
-    pasivos: "",
-    capital: "",
-  });
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import Login from "./Login";
+import FinancialDashboard from "./FinancialDashboard";
 
-  const handleChange = (e) => {
-    setFinancialData({ ...financialData, [e.target.name]: e.target.value });
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setIsAuthenticated(localStorage.getItem("auth") === "true");
+  }, []);
+
+  const handleLogin = () => {
+    localStorage.setItem("auth", "true");
+    setIsAuthenticated(true);
   };
 
-  const utilidadNeta = financialData.ingresos - financialData.costos - financialData.gastos;
-  const razonCorriente = (financialData.activos / financialData.pasivos).toFixed(2);
-  const roe = ((utilidadNeta / financialData.capital) * 100).toFixed(2);
+  const handleLogout = () => {
+    localStorage.removeItem("auth");
+    setIsAuthenticated(false);
+  };
 
   return (
-    <Grid container spacing={3} padding={3}>
-      <Grid item xs={12} md={6} lg={4}>
-        <Card>
-          <CardHeader title="Estado de Resultados" />
-          <CardContent>
-            <TextField fullWidth label="Ingresos" name="ingresos" onChange={handleChange} margin="normal" />
-            <TextField fullWidth label="Costos" name="costos" onChange={handleChange} margin="normal" />
-            <TextField fullWidth label="Gastos" name="gastos" onChange={handleChange} margin="normal" />
-            <Typography variant="h6">Utilidad Neta: ${utilidadNeta || 0}</Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6} lg={4}>
-        <Card>
-          <CardHeader title="Balance General" />
-          <CardContent>
-            <TextField fullWidth label="Activos" name="activos" onChange={handleChange} margin="normal" />
-            <TextField fullWidth label="Pasivos" name="pasivos" onChange={handleChange} margin="normal" />
-            <TextField fullWidth label="Capital" name="capital" onChange={handleChange} margin="normal" />
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12} md={6} lg={4}>
-        <Card>
-          <CardHeader title="Indicadores Financieros" />
-          <CardContent>
-            <Typography variant="body1">Razón Corriente: {isNaN(razonCorriente) ? "N/A" : razonCorriente}</Typography>
-            <Typography variant="body1">ROE: {isNaN(roe) ? "N/A" : roe}%</Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12}>
-        <Button variant="contained" color="primary" onClick={() => console.log("Enviar datos al backend:", financialData)}>
-          Enviar Datos
-        </Button>
-      </Grid>
-    </Grid>
+    <Router>
+      <Routes>
+        <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" />} />
+        <Route path="/" element={isAuthenticated ? <FinancialDashboard onLogout={handleLogout} /> : <Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 }
